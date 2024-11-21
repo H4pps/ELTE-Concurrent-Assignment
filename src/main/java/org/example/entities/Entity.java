@@ -1,6 +1,6 @@
 package org.example.entities;
 
-public abstract class Entity extends Thread {
+public abstract class Entity implements Runnable {
   private int row, column;
   public int getRow() {
     return row;
