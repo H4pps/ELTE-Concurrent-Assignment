@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Farm {
-  public final int DEFAULT_SLEEP_TIME = 200;
+  public final int DEFAULT_SLEEP_TIME;
   public final int centralZoneNumber = 4;
   public final int zoneSize;
 
@@ -31,14 +31,19 @@ public class Farm {
   private Dog[] dogs;
   private Entities[][] field;
 
-  public Farm(int size) {
+  public Farm() {
+    this(14, 10, 5, 200);
+  }
+
+  public Farm(int size, int sheepCount, int dogCount, int sleepTime) {
     this.size = size;
     zoneSize = (size - 2) / 3;
-    sheepCount = 10;
-    dogCount = 5;
+    this.sheepCount = sheepCount;
+    this.dogCount = dogCount;
+    DEFAULT_SLEEP_TIME = sleepTime;
+
     isRunning = new AtomicBoolean(false);
     generateField();
-    display();
   }
 
   public Entities[][] getField() {
