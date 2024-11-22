@@ -13,7 +13,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class Farm {
-  private static final int DEFAULT_SLEEP_TIME = 1000;
+  public final int DEFAULT_SLEEP_TIME = 200;
+  public final int centralZoneNumber = 4;
+  public final int zoneSize;
+
   private final Random random = new Random();
   private ScheduledExecutorService sheepExecutor;
   private ScheduledExecutorService dogExecutor;
@@ -21,8 +24,6 @@ public class Farm {
   private int size;
   private int sheepCount, dogCount;
 
-  private int zoneSize;
-  private final int centralZoneNumber = 4;
 
   private Sheep[] sheeps;
   private Dog[] dogs;
@@ -123,7 +124,7 @@ public class Farm {
   }
 
   // returns the coordinate of the top-left corner of the zone (the number of the zone is [0, 8])
-  private int[] getZoneOrigin(int number) {
+  public int[] getZoneOrigin(int number) {
     return new int[]{1 + zoneSize * (number / 3), 1 + zoneSize * (number % 3)};
   }
 
