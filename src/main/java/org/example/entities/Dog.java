@@ -6,11 +6,8 @@ import org.example.Farm;
 import java.util.ArrayList;
 
 public class Dog extends Entity {
-//  private static int dogCount = 0;
-//  private int id;
   public Dog(int row, int column, Farm farm) {
     super(row, column, farm, Entities.DOG);
-//    id = dogCount++;
   }
 
   private boolean notInTheCenter(int row, int column) {

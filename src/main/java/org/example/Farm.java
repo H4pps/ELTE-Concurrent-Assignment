@@ -11,6 +11,7 @@ import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Farm {
   public final int DEFAULT_SLEEP_TIME = 200;
@@ -21,11 +22,12 @@ public class Farm {
   private ScheduledExecutorService sheepExecutor;
   private ScheduledExecutorService dogExecutor;
 
-  private int size;
-  private int sheepCount, dogCount;
+  private final int size;
+  private final int sheepCount, dogCount;
 
+  private final AtomicBoolean isRunning;
 
-  private Sheep[] sheeps;
+  private Sheep[] sheeps; // I am sorry for this name
   private Dog[] dogs;
   private Entities[][] field;
 
@@ -34,6 +36,7 @@ public class Farm {
     zoneSize = (size - 2) / 3;
     sheepCount = 10;
     dogCount = 5;
+    isRunning = new AtomicBoolean(false);
     generateField();
     display();
   }
@@ -48,13 +51,25 @@ public class Farm {
     return size;
   }
 
-  public void submitChanges(SubmitData data) { // sync later
+  public void submitChanges(SubmitData data) { // sync later (if I will need that)
     field[data.from[0]][data.from[1]] = Entities.EMPTY;
     field[data.to[0]][data.to[1]] = data.entityType;
     display();
   }
 
+  public void endSimulation() {
+    if (!isRunning.get()) {
+      return;
+    }
+    isRunning.set(false);
+    // Do I have to shut down more?
+    sheepExecutor.shutdown();
+    dogExecutor.shutdown();
+    System.out.println("Simulation ended");
+  }
+
   public void startSimulation() {
+    isRunning.set(true);
     sheepExecutor = Executors.newScheduledThreadPool(10, new SheepThreadFactory());
     dogExecutor = Executors.newScheduledThreadPool(5, new DogThreadFactory());
 

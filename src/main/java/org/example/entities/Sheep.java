@@ -6,12 +6,8 @@ import org.example.Farm;
 import java.util.ArrayList;
 
 public class Sheep extends Entity{
-//  private static int sheepCount = 0;
-//  private int id;
-
   public Sheep(int row, int column, Farm farm) {
     super(row, column, farm, Entities.SHEEP);
-//    id = sheepCount++;
   }
 
   private Entities[] getEntitiesInDirection(Direction direction) {
@@ -41,13 +37,13 @@ public class Sheep extends Entity{
     return directionEntities;
   }
 
-  private boolean hasDog(Entities[] directionEntities) {
+  private boolean noDogs(Entities[] directionEntities) {
     for (Entities entity : directionEntities) {
       if (entity == Entities.DOG) {
-        return true;
+        return false;
       }
     }
-    return false;
+    return true;
   }
 
   private boolean directionCheck(Direction direction) {
@@ -55,16 +51,16 @@ public class Sheep extends Entity{
     return switch (direction) {
       case UP -> row == 1 && directionEntities[1] == Entities.GATE ||
               row != 1 && directionEntities[1] == Entities.EMPTY &&
-              !hasDog(directionEntities);
+              noDogs(directionEntities);
       case DOWN -> row == farm.getSize() - 2 && directionEntities[1] == Entities.GATE ||
               row != farm.getSize() - 2 && directionEntities[1] == Entities.EMPTY &&
-              !hasDog(directionEntities);
+              noDogs(directionEntities);
       case LEFT -> column == 1 && directionEntities[1] == Entities.GATE ||
               column != 1 && directionEntities[1] == Entities.EMPTY &&
-              !hasDog(directionEntities);
+              noDogs(directionEntities);
       case RIGHT -> column == farm.getSize() - 2 && directionEntities[1] == Entities.GATE ||
               column != farm.getSize() - 2 && directionEntities[1] == Entities.EMPTY &&
-              !hasDog(directionEntities);
+              noDogs(directionEntities);
     };
   }
 

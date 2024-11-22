@@ -27,11 +27,18 @@ public abstract class Entity implements Runnable {
     this.entityType = entityType;
   }
 
+  private boolean checkEndCondition() {
+    return row == 0 || row == farm.getSize() - 1 || column == 0 || column == farm.getSize() - 1;
+  }
+
   @Override
   public void run() {
     int[] from = new int[]{row, column};
     move();
     submitChanges(from);
+    if (checkEndCondition()) {
+      farm.endSimulation();
+    }
   }
 
   protected void move() {
