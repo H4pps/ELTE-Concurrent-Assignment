@@ -3,14 +3,20 @@ package org.example;
 import org.example.entities.Dog;
 import org.example.entities.Entities;
 import org.example.entities.Sheep;
+import org.example.util.DogThreadFactory;
+import org.example.util.SheepThreadFactory;
+import org.example.util.SubmitData;
 
 import java.util.Random;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class Farm {
-  private static final int DEFAULT_SLEEP_TIME = 200;
+  private static final int DEFAULT_SLEEP_TIME = 1000;
   private final Random random = new Random();
+  private ScheduledExecutorService sheepExecutor;
+  private ScheduledExecutorService dogExecutor;
 
   private int size;
   private int sheepCount, dogCount;
@@ -27,9 +33,36 @@ public class Farm {
     zoneSize = (size - 2) / 3;
     sheepCount = 10;
     dogCount = 5;
-
     generateField();
-    System.out.println(this);
+    display();
+  }
+
+  public Entities[][] getField() {
+    return field;
+  }
+  public Entities getEntity(int row, int column) {
+    return field[row][column];
+  }
+  public int getSize() {
+    return size;
+  }
+
+  public void submitChanges(SubmitData data) { // sync later
+    field[data.from[0]][data.from[1]] = Entities.EMPTY;
+    field[data.to[0]][data.to[1]] = data.entityType;
+    display();
+  }
+
+  public void startSimulation() {
+    sheepExecutor = Executors.newScheduledThreadPool(10, new SheepThreadFactory());
+    dogExecutor = Executors.newScheduledThreadPool(5, new DogThreadFactory());
+
+    for (Sheep sheep : sheeps) {
+      sheepExecutor.scheduleAtFixedRate(sheep, 0, DEFAULT_SLEEP_TIME, TimeUnit.MILLISECONDS);
+    }
+    for (Dog dog : dogs) {
+      dogExecutor.scheduleAtFixedRate(dog, 0, DEFAULT_SLEEP_TIME, TimeUnit.MILLISECONDS);
+    }
   }
 
   private void generateField() {
@@ -67,7 +100,7 @@ public class Farm {
       int[] position = generateRandomPosition(centralOrigin[0], centralOrigin[0] + zoneSize,
               centralOrigin[1], centralOrigin[1] + zoneSize);
 
-      sheeps[i] = new Sheep(position[0], position[1]);
+      sheeps[i] = new Sheep(position[0], position[1], this);
       field[position[0]][position[1]] = Entities.SHEEP;
     }
   }
@@ -84,7 +117,7 @@ public class Farm {
       int[] position = generateRandomPosition(zoneOrigin[0], zoneOrigin[0] + zoneSize,
               zoneOrigin[1], zoneOrigin[1] + zoneSize);
 
-      dogs[dogsGenerated] = new Dog(position[0], position[1]);
+      dogs[dogsGenerated] = new Dog(position[0], position[1], this);
       field[position[0]][position[1]] = Entities.DOG;
     }
   }
@@ -134,16 +167,23 @@ public class Farm {
     return column;
   }
 
+  private void cleanTerminal() {
+    System.out.print("\033[H\033[2J");
+    System.out.flush();
+    System.out.print("\u001B[0;0H");
+    System.out.flush();
+  }
 
-  public void startSimulation() {
-//    ExecutorService sheepExecutor = Executors.newScheduledThreadPool(10);
-//    ExecutorService dogExecutor = Executors.newScheduledThreadPool(5);
+  public void display() {
+    cleanTerminal();
+    System.out.println(this);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < size; i++) {
+      sb.append(i + (i < 10 ? ":  " : ": "));
       for (int j = 0; j < size; j++) {
         sb.append(field[i][j].representation);
       }
