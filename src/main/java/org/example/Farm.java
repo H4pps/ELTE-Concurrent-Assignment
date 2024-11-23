@@ -8,9 +8,7 @@ import org.example.util.SheepThreadFactory;
 import org.example.util.SubmitData;
 
 import java.util.Random;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Farm {
@@ -19,6 +17,7 @@ public class Farm {
   public final int zoneSize;
 
   private final Random random = new Random();
+  private final TerminalUI UI;
   private ScheduledExecutorService sheepExecutor;
   private ScheduledExecutorService dogExecutor;
 
@@ -44,6 +43,8 @@ public class Farm {
 
     isRunning = new AtomicBoolean(false);
     generateField();
+
+    UI = new TerminalUI(size, this);
   }
 
   public Entities[][] getField() {
@@ -57,9 +58,9 @@ public class Farm {
   }
 
   public void submitChanges(SubmitData data) { // sync later (if I will need that)
+    UI.submitChanges(data);
     field[data.from[0]][data.from[1]] = Entities.EMPTY;
     field[data.to[0]][data.to[1]] = data.entityType;
-    display();
   }
 
   public void endSimulation() {
@@ -188,29 +189,53 @@ public class Farm {
     return column;
   }
 
-  private void cleanTerminal() {
-    System.out.print("\033[H\033[2J");
-    System.out.flush();
-    System.out.print("\u001B[0;0H");
-    System.out.flush();
-  }
+  private static class TerminalUI {
+    private final int size;
+    private final Character[][] characterRepresentation;
+    private final int zoneSize;
+    public final BlockingQueue<SubmitData> changesQueue;
 
-  public void display() {
-    cleanTerminal();
-    System.out.println(this);
-  }
+    public TerminalUI(int size, Farm farm) {
+      this.size = size;
+      characterRepresentation = new Character[size][size];
+      zoneSize = (size - 2) / 3;
 
-  @Override
-  public String toString() {
-    StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < size; i++) {
-      sb.append(i + (i < 10 ? ":  " : ": "));
-      for (int j = 0; j < size; j++) {
-        sb.append(field[i][j].representation);
+      for (int i = 0; i < size; ++i) {
+        for (int j = 0; j < size; ++j) {
+          characterRepresentation[i][j] = farm.getEntity(i, j).representation;
+        }
       }
-      sb.append("\n");
+
+      changesQueue = new ArrayBlockingQueue<>(zoneSize * zoneSize + 2);
     }
 
-    return sb.toString();
+    public void submitChanges(SubmitData data) {
+      characterRepresentation[data.from[0]][data.from[1]] = Entities.EMPTY.representation;
+      characterRepresentation[data.to[0]][data.to[1]] = data.entityType.representation;
+
+      display();
+    }
+    public void display() {
+      System.out.println(this);
+    }
+
+    // Intellij does not support the "true" terminal experience,
+    // so it is better to use vscode with provided settings.json
+    // vscode terminal should be big enough for to display the whole board
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder();
+      sb.append("\033[H\033[2J").append("\u001B[0;0H"); // to clear terminal
+      for (int i = 0; i < size; i++) {
+        sb.append(i).append(i < 10 ? ":  " : ": ");
+        for (int j = 0; j < size; j++) {
+          sb.append(characterRepresentation[i][j]);
+        }
+        sb.append("\n");
+      }
+
+      return sb.toString();
+    }
   }
+
 }

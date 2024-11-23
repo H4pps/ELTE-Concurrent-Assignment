@@ -1,15 +1,15 @@
 package org.example.entities;
 
 public enum Entities {
-  EMPTY("."),
-  SHEEP("S"),
-  DOG("D"),
-  WALL("#"),
-  GATE("^");
+  EMPTY('.'),
+  SHEEP('S'),
+  DOG('D'),
+  WALL('#'),
+  GATE('^');
 
-  public final String representation;
+  public final Character representation;
 
-  Entities(String representation) {
+  Entities(Character representation) {
     this.representation = representation;
   }
 }
