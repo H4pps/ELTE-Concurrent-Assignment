@@ -52,9 +52,7 @@ public abstract class Entity implements Runnable {
 
   private void submitChanges(int[] from) {
     SubmitData changeData = new SubmitData(from, new int[]{row, column}, entityType);
-    synchronized (farm) {
-      farm.submitChanges(changeData);
-    }
+    farm.submitChanges(changeData);
   }
 
   protected void changePosition(Direction direction) {

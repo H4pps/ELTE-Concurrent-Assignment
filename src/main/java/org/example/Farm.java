@@ -20,6 +20,7 @@ public class Farm {
   private final TerminalUI UI;
   private ScheduledExecutorService sheepExecutor;
   private ScheduledExecutorService dogExecutor;
+  private final Thread UIThread;
 
   private final int size;
   private final int sheepCount, dogCount;
@@ -45,6 +46,8 @@ public class Farm {
     generateField();
 
     UI = new TerminalUI(size, this);
+    UIThread = new Thread(UI);
+    UIThread.start();
   }
 
   public Entities[][] getField() {
@@ -59,8 +62,10 @@ public class Farm {
 
   public void submitChanges(SubmitData data) { // sync later (if I will need that)
     UI.submitChanges(data);
-    field[data.from[0]][data.from[1]] = Entities.EMPTY;
-    field[data.to[0]][data.to[1]] = data.entityType;
+    synchronized (field) {
+      field[data.from[0]][data.from[1]] = Entities.EMPTY;
+      field[data.to[0]][data.to[1]] = data.entityType;
+    }
   }
 
   public void endSimulation() {
@@ -71,7 +76,6 @@ public class Farm {
     // Do I have to shut down more?
     sheepExecutor.shutdown();
     dogExecutor.shutdown();
-    System.out.println("Simulation ended");
   }
 
   public void startSimulation() {
@@ -189,7 +193,7 @@ public class Farm {
     return column;
   }
 
-  private static class TerminalUI {
+  private static class TerminalUI implements Runnable {
     private final int size;
     private final Character[][] characterRepresentation;
     private final int zoneSize;
@@ -209,11 +213,43 @@ public class Farm {
       changesQueue = new ArrayBlockingQueue<>(zoneSize * zoneSize + 2);
     }
 
-    public void submitChanges(SubmitData data) {
+    @Override
+    public void run() {
+      while (true) {
+        try {
+          SubmitData data = changesQueue.take();
+          applyChange(data);
+          if (terminationCondition(data)) {
+            System.out.println("Simulation finished");
+            break;
+          }
+        } catch (InterruptedException e) {
+          System.err.println("Error while taking changes");
+          e.printStackTrace();
+        }
+      }
+    }
+
+    private boolean terminationCondition(SubmitData data) {
+      return data.to[0] == 0 || data.to[0] == size - 1 || data.to[1] == 0 || data.to[1] == size - 1;
+    }
+
+    // should be called only from the run method (not synchronized)
+    private void applyChange(SubmitData data) {
       characterRepresentation[data.from[0]][data.from[1]] = Entities.EMPTY.representation;
       characterRepresentation[data.to[0]][data.to[1]] = data.entityType.representation;
 
       display();
+    }
+
+    public void submitChanges(SubmitData data) {
+      try {
+        changesQueue.put(data);
+      } catch (InterruptedException e) {
+        System.err.println("Error while submitting changes");
+        e.printStackTrace();
+      }
+
     }
     public void display() {
       System.out.println(this);
@@ -221,7 +257,7 @@ public class Farm {
 
     // Intellij does not support the "true" terminal experience,
     // so it is better to use vscode with provided settings.json
-    // vscode terminal should be big enough for to display the whole board
+    // vscode terminal should be big enough to display the whole board
     @Override
     public String toString() {
       StringBuilder sb = new StringBuilder();
