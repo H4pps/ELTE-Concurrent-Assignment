@@ -82,7 +82,7 @@ public class Farm {
     } catch (InterruptedException e) {
       dogExecutor.shutdownNow();
       System.out.println("Error while shutting down dog service");
-      Thread.currentThread().interrupt();
+      // Thread.currentThread().interrupt();
     }
     sheepExecutor.shutdown();
     try {
@@ -92,7 +92,7 @@ public class Farm {
     } catch (InterruptedException e) {
       sheepExecutor.shutdownNow();
       System.out.println("Error while shutting down sheep service");
-       Thread.currentThread().interrupt();
+      // Thread.currentThread().interrupt();
     }
 
     // perform shutdown
