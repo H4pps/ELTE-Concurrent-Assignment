@@ -75,9 +75,43 @@ public class Farm {
     isRunning.set(false);
     // Do I have to shut down more?
     sheepExecutor.shutdown();
+    try {
+      if (!sheepExecutor.awaitTermination(DEFAULT_SLEEP_TIME, TimeUnit.MILLISECONDS)) {
+        sheepExecutor.shutdownNow();
+      }
+    } catch (InterruptedException e) {
+      sheepExecutor.shutdownNow();
+      System.out.println("Error while shutting down sheep service");
+      Thread.currentThread().interrupt();
+    }
+
     dogExecutor.shutdown();
+    try {
+      if (!dogExecutor.awaitTermination(DEFAULT_SLEEP_TIME, TimeUnit.MILLISECONDS)) {
+        dogExecutor.shutdownNow();
+      }
+    } catch (InterruptedException e) {
+      dogExecutor.shutdownNow();
+      System.out.println("Error while shutting down dog service");
+      Thread.currentThread().interrupt();
+    }
+    // perform shutdown
+
   }
 
+  private void shutdownService(ExecutorService service) {
+    service.shutdown();
+    try {
+      if (!service.awaitTermination(DEFAULT_SLEEP_TIME, TimeUnit.MILLISECONDS)) {
+        service.shutdownNow();
+        if (!service.awaitTermination(DEFAULT_SLEEP_TIME, TimeUnit.MILLISECONDS)) {
+          System.err.println("Service did not terminate");
+        }
+      }
+    } catch (InterruptedException e) {
+      service.shutdownNow();
+    }
+  }
 
   public void startSimulation() {
     isRunning.set(true);
@@ -222,6 +256,7 @@ public class Farm {
           applyChange(data);
           if (terminationCondition(data)) {
             System.out.println("Simulation finished");
+            changesQueue.clear();
             break;
           }
         } catch (InterruptedException e) {
