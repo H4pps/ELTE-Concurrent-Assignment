@@ -73,17 +73,6 @@ public class Farm {
       return;
     }
     isRunning.set(false);
-    // Do I have to shut down more?
-    sheepExecutor.shutdown();
-    try {
-      if (!sheepExecutor.awaitTermination(DEFAULT_SLEEP_TIME, TimeUnit.MILLISECONDS)) {
-        sheepExecutor.shutdownNow();
-      }
-    } catch (InterruptedException e) {
-      sheepExecutor.shutdownNow();
-      System.out.println("Error while shutting down sheep service");
-      Thread.currentThread().interrupt();
-    }
 
     dogExecutor.shutdown();
     try {
@@ -95,6 +84,17 @@ public class Farm {
       System.out.println("Error while shutting down dog service");
       Thread.currentThread().interrupt();
     }
+    sheepExecutor.shutdown();
+    try {
+      if (!sheepExecutor.awaitTermination(DEFAULT_SLEEP_TIME, TimeUnit.MILLISECONDS)) {
+        sheepExecutor.shutdownNow();
+      }
+    } catch (InterruptedException e) {
+      sheepExecutor.shutdownNow();
+      System.out.println("Error while shutting down sheep service");
+       Thread.currentThread().interrupt();
+    }
+
     // perform shutdown
 
   }
